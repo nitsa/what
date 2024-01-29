@@ -1,0 +1,421 @@
+|=------------------------------------------------------------------------=|
+|=------------------------=[ What.Really.Was ]=---------------------------=|
+|=------------------------------------------------------------------------=|
+|=-------------=[ A forensics tool for uncovering secrets ]=--------------=|
+|=------------------------------------------------------------------------=|
+|=----------------------=[ by Nikolaos Tsapakis ]=------------------------=|
+|=--------------------=[ https://github.com/nitsa ]=----------------------=|
+|=------------------------------------------------------------------------=|
+
+
+
+
+--[ Contents
+
+    1 - Introduction
+
+    2 - Google search back in Time
+	
+    3 - Youtube search back in Time
+	
+    4 - Visited URLs back in Time
+	
+    5 - Downloaded files back in Time
+	
+    6 - Pivoting insteresting directories back in Time
+	
+    7 - Finding passwords
+	
+    8 - Investigation example
+	
+    9 - Last words
+	
+	
+    
+	
+--[ 001 - Introduction
+
+What.Really.Was is a tool for searching a literal pattern on storage
+devices like a HD/SSD disk or USB disk. The device is been accessed
+as a raw data file unit by unit. What this actually means is that
+would be able to discover deleted files, directories or other data,
+since we do not care about specific data structures. You define your
+pattern/signature in pattern.txt and then the program will search
+though the device of choice. If it finds it then the unit, offset,
+pattern and an area around the matched pattern will be displayed. The 
+unit is a block of bytes accessed on the device with a single read
+operation. The unit size will also be most of the amount of RAM that 
+will be allocated for the program. You may change the area and unit size
+by providing them as input parameters. You may also provide the device
+as input parameter. The pattern can be anything (string or binary)
+but it has to be an exact match. No regular expressions are supported
+since we wanted to make this tool work fast enough. But using the ideas
+and thinking provided in that document (examples for x64 Win10 OS) you
+can make your own great discoveries. The tool automatically saves 
+output to out.txt and supports both Windows and Linux. It is written 
+in Python 3.
+
+
+
+
+--[ 002 - Google search back in Time
+
+Let us try to find out what Google searches someone has potentially
+performed on the machine. To have a pattern to begin with, use the
+machine browser and do a Google search for something unique like for
+example "crazytiger". Then open pattern.txt and place "crazytiger"
+string (without quotes) on that file and run the tool. Use operation 1
+to perform the search on a WinOS drive C:\ by default. You may change
+drive letter and device ID if you wish. Following is one of the 
+interesting results :
+
+b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+\x00\x00\x00\x00\x00\x00\x00\x00\x00\x848\xb0O\x15\x00\x87/Y+\t\x08
+\x08\x01\x06%\x08\x05\x00\x00\x00\x02\x08\x00\thttps://www.google.com
+/search?q=crazytiger&sca_esv=595140811&source=hp&ei=_1qUZfj2DJWW[...]'
+
+You may now use that knowledge and define a new pattern like following
+(without quotes) in order to discover more Google searches on that 
+machine :
+
+"https://www.google.com/search?q="
+
+Lots of results like following (trimmed) :
+
+https://www.google.com/search?q=gmail+email+address
+https://www.google.com/search?q=WinHex+find+browser+sites
+https://www.google.com/search?q=detect+computer+type+using+python
+https://www.google.com/search?q=get+machine+ID+using+python
+https://www.google.com/search?q=mazoha+disco
+https://www.google.com/search?q=crazytiger
+https://www.google.com/search?q=email+headers+examples
+[...]
+
+
+
+
+--[ 003 - Youtube search back in Time
+
+You may use similar logic for all following back in time searches.
+In case of Youtube you may visit a specific url and then search for
+it as a pattern. Let us search for "crazycookie" this time, following
+is an interesting result :
+
+b'request-Origin\x00https://www.youtube.com\x00request-Referer\x00
+https://www.youtube.com/results?search_query=crazycookie\x00response-head\
+x00HTTP/3 200 \r\ncontent-type: application/json; charset=UTF-8\r\nvary:
+[...]'
+
+You may now use that knowledge to define a new pattern like following
+(without quotes) in order to discover more Youtube searches on that 
+machine :
+
+"https://www.youtube.com/results?search_query="
+
+Again lots of results like following (trimmed) :
+
+https://www.youtube.com/results?search_query=80s
+https://www.youtube.com/results?search_query=stavros+kosma+petris
+https://www.youtube.com/results?search_query=%CE%9C%CE%B9%CE%BA%CF%81%CE%AD
+https://www.youtube.com/results?search_query=serious+sam+4serious sam 4 
+https://www.youtube.com/results?search_query=dua+lipa+interview
+https://www.youtube.com/results?search_query=crazycookie
+https://www.youtube.com/results?search_query=anathema+live
+https://www.youtube.com/results?search_query=archive+again+long+version
+[...]
+
+
+
+
+--[ 004 - Visited URLs back in Time
+
+So what about urls visited back in time ? Once again you may visit a
+known url and then search for it as a pattern on the device (without
+quotes):
+
+"https://www.weforum.org"
+
+One of the interesting results is like following :
+b"\xc7bU\xa8\xec'\x02\xec\xf7\x7f\x01|O\xfd\x82\xa4\xfe\x03\x00\xc6\
+xc8\xe1u\xfe\xdb\x00\x00\x00\x03\x00\x00\x00\x01e\x94`\xe8e\x94`\xe9Fh
+\xdc\x96e\x9b\xe8\x92\x00\x00\x00f\x00\x00\x00\x00O^partitionKey=%28https
+%2Cweforum.org%29,:https://www.weforum.org/packs/js/630-8b64e21e[...]"
+
+Again, use that knowledge to define a new pattern like following (without
+quotes) in order to discover more urls :
+
+"^partitionKey="
+
+You may also increase area size from default 100 to 200 bytes to see more
+data around the pattern match :
+
+[...]
+Enter area size in bytes or press Enter (default 100) : 200
+[...]
+
+And some for the results (trimmed) :
+
+^partitionKey=%28https%2Cyoutube.com
+^partitionKey=%28https%2Cupwork.com
+^partitionKey=%28https%2Ckathimerini.gr
+^partitionKey=%28https%2Clifo.gr
+^partitionKey=%28https%2Cpatrisnews.com
+^partitionKey=%28https%2Chowjsay.com
+^partitionKey=%28https%2Crocking.gr
+^partitionKey=%28https%2Cyahoo.com
+[...]
+
+
+
+
+--[ 005 - Downloaded files back in Time
+
+Let's now check what files the user may have downloaded on the machine.
+You can use classic pattern like following (without quotes) :
+
+"\Downloads\"
+
+Or if you wish to check on specific user (without quotes) :
+
+"\guser\Downloads\"
+
+Following are some interesting results (trimmed) :
+
+C:\\Users\\guser\\Downloads\\526.47-desktop-win10-win11-64bit[...].exe
+C:\\Users\\guser\\Downloads\\snapshot_2023-06-10
+C:\\Users\\guser\\Downloads\\TeamViewerPortable\\TeamViewer_Desktop.exe
+C:\\Users\\guser\\Downloads\\Wireshark-win64-4.0.10.exe
+C:\\Users\\guser\\Downloads\\ProcessExplorer\\procexp.exe
+C:\\Users\\guser\\Downloads\\files.txt
+C:\\Users\\guser\\Downloads\\ViberSetup.exe
+C:\\Users\\guser\\Downloads\\python-3.12.1-amd64.exe
+C:\\Users\\guser\\Downloads\\VirtualBox-7.0.0-153978-Win.exe
+[...]
+
+
+
+
+--[ 006 - Pivoting insteresting directories back in Time
+
+Perhaps you wish to find out what existed back in time inside directory
+"snapshot_2023-06-10" just discovered under Downloads :
+
+"C:\Users\guser\Downloads\snapshot_2023-06-10\"
+
+Following are some interesting results (trimmed) :
+
+C:\\Users\\guser\\Downloads\\snapshot_2023-06-10\\commithash.txt
+C:\\Users\\guser\\Downloads\\snapshot_2023-06-10\\release\\x64\\asmjit.dll
+C:\\Users\\guser\\Downloads\\snapshot_2023-06-10\\release\\x64\\x64dbg.exe
+C:\\Users\\guser\\Downloads\\snapshot_2023-06-10\\release\\x32\\x32dbg.exe
+[...]
+
+
+
+
+--[ 007 - Finding passwords
+
+At some point you may needed to remember a password stored in a file which
+has been removed. If you can remember something inside the file and you are
+a bit lucky, you may get it back. Same applies for small portions of data 
+you may wish to recover. For example, I remember that inside the file was
+the string "birthday" so let us look for that pattern (without quotes) :
+
+"birthday"
+
+There is a lot of junk in the output. Perhaps there is a space character
+before and after the pattern, so a new pattern could be like following :
+
+" birthday "
+
+2023-12-02 19:31:21.014117 : pattern found in unit #4 offset 65987227
+
+b"x00\\x00\\x00\\x00\\x00\\x00\\x00\\x06\\x00\\x10\\x00\\x00\\x00\\x18
+\\x00\\x00\\x00\\xbd\\xa3>\\t\\x85\\xa9\\xee\\x11\\xa4s\\xe0\\xd5^\\xe3
+\\x99\\x1f\\x80\\x00\\x00\\x00\\x80\\x00\\x00\\x00\\x00\\x00\\x18\\x00
+\\x00\\x00\\x01\\x00f\\x00\\x00\\x00\\x18\\x00\\x00\\x00Since this is my
+birthday here is my gift:\\r\\n\\r\\nuser : jasson\\r\\
+npass : Only1CouldSurvive162!!$\\r\\n\\r\\nEnjoy!\\x00\\x00\\xff\\xff
+\\xff\\xff\\x82yG\\x11\\x00\\x00\\x00\\x00\\x00'\r\n\r\n\r"
+
+You may jump straight to unit #4 and examine the pattern found by
+increasing the area size from default 100 to 300 bytes :
+
+Enter operation (1=search pattern, 2=list drives, 3=listen to music) : 1
+Enter unit size in bytes or press Enter (default 1073741824 for 1 GB) :
+Enter area size in bytes or press Enter (default 100) : 300
+Enter mountpoint/disk drive letter or press Enter (default C:) :
+Enter device or press Enter (default \\.\PHYSICALDRIVE0) :
+Enter unit to jump or press Enter (default 0) : 4
+
+[...]
+
+2023-12-02 19:32:37.523138 : pattern found in unit #4 offset 65987227
+
+b"\\x00.\\x00t\\x00x\\x00t\\x00\\x00\\x00\\x00\\x00\\x00\\x00@\\x00
+\\x00\\x00(\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x06\\x00
+\\x10\\x00\\x00\\x00\\x18\\x00\\x00\\x00\\xbd\\xa3>\\t\\x85\\xa9
+\\xee\\x11\\xa4s\\xe0\\xd5^\\xe3\\x99\\x1f\\x80\\x00\\x00\\x00\\x80
+\\x00\\x00\\x00\\x00\\x00\\x18\\x00\\x00\\x00\\x01\\x00f\\x00\\x00
+\\x00\\x18\\x00\\x00\\x00Since this is my birthday here is my gift:
+\\r\\n\\r\\nuser : jasson\\r\\npass : Only1CouldSurvive162!!$\\r\\n
+\\r\\nEnjoy !\\x00\\x00\\xff\\ xff\\xff\\xff\\x82yG\\x11\\x00\\x00
+\\x00\\x00\\x00'\r\n\r\n\r\n\r\n\r\n\r\n\r\n\ r\n\r\n\r\n\r\n\r\n\
+r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\x00\x00\x00\x00\x00\x00
+\x00\00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+
+
+
+
+--[ 008 - Investigation example
+
+Let us initiate an investigation to see what interesting stuff we may 
+discover on the target machine. We start by searching for files on user's
+desktop :
+
+"\guser\Desktop\"
+
+Among others, we get the following interesting results (trimmed):
+
+b'9 21-10-12.mkv\x143\x03k\x01C:\\Users\\guser\\Desktop\\2023-09-10
+15-42-54.mkv\x13\x14\x03-\x01F:\\MOVIES\\music.mp4\x12,\x03]\x01C:\\Users
+\\guser\\Desktop\\item_vm\\music.mp4\x11=\x03\x7f\x01[...]'
+
+There appears to be a folder named "item_vm" on desktop which contains
+file music.mp4
+
+Checking on item_vm folder :
+
+"\Desktop\item_vm\"
+
+We get the following interesting results (trimmed) :
+
+C:\\Users\\guser\\Desktop\\item_vm\\reg.py
+C:\\Users\\guser\\Desktop\\item_vm\\hidd.py
+C:\\Users\\guser\\Desktop\\item_vm\\exit.txt
+C:\\Users\\guser\\Desktop\\item_vm\\article.txt
+C:\\Users\\guser\\Desktop\\item_vm\\test.py
+C:\\Users\\guser\\Desktop\\item_vm\\foss.py
+C:\\Users\\guser\\Desktop\\item_vm\\music.mp4
+C:\\Users\\guser\\Desktop\\item_vm\\evd\\Evil.Dead[...].srt
+C:\\Users\\guser\\Desktop\\item_vm\\Copying.Beethoven[...].srt
+C:\\Users\\guser\\Desktop\\item_vm\\evd\\YTS.MX[...].jpg
+C:\\Users\\guser\\Desktop\\item_vm\\evd\\YTSY[...](TOR).txt
+C:\\Users\\guser\\Desktop\\item_vm\\evd\\evil-dead-rise[...].srt
+C:\\Users\\guser\\Desktop\\item_vm\\astar\\tar.srt
+C:\\Users\\guser\\Desktop\\item_vm\\asmile\\smile.srt
+C:\\Users\\guser\\Desktop\\item_vm\\Prey.2022\\p.srt
+
+Quite interesting results. Let us check if we can find any of those
+files not only inside item_vm but also somewhere else on the filesystem.
+We perform 4 different searches and check separately for the following
+patterns :
+
+"Copying.Beethoven"
+"Evil.Dead"
+"evil-dead-rise"
+"Prey.2022."
+
+We do not get back any results except those inside the item_vm folder. 
+Perhaps that folder is some sort of destination folder as a shared item.
+But why we do not see possible candidates for source folder(s) in the 
+results? Perhaps some data have been overwritten on hard disk by new data.
+Do not forget that item_vm folder is emply at that time, and we are 
+looking in raw disk data.
+
+Could "vm" mean a virtual machine ? You may recall the results in Downloads
+folder and filename VirtualBox-7.0.0-153978-Win.exe discovered earlier 
+inside that folder. If the user had installed a virtual machine and 
+performed all actions from within that machine, perhaps is able to 
+forensically hide some of these actions. In order to verify our hypothesis,
+we can check if VM software exists on the machine. We check for the
+following pattern (without quotes) :
+
+"VirtualBox"
+
+We get tons of positive results like following (trimmed) :
+
+C:\\\\Users\\\\guser\\\\Downloads\\\\VirtualBox-7.0.0-153978-Win.exe
+C:\\Program Files\\Oracle\\VirtualBox\\VBoxSVC.exe
+[...]\\\\Oracle\\\\VirtualBox\\\\VirtualBox.exe
+Loading settings file "C:\\Users\\guser\\.VirtualBox\\VirtualBox.xml
+
+It seems possible that user has downloaded and installed Vbox. Now we may
+search for potential vbox images using the following pattern (without
+quotes) :
+
+".vbox"
+
+Once again we get tons of results like following (trimmed) :
+
+Loading settings file "E:\\VM\\Ubuntu\\Ubuntu.vbox"
+Loading settings file "E:\\VM\\Win10\\Win10.vbox
+[...]
+
+We have discovered another drive (E:) which possibly stores the VMs.
+We may now check on that drive for some of our previously discovered
+filenames. We would need to change default drive letter and device ID.
+In order to find out attached devices use option 2 and then feed that
+information in option 1 to search for pattern "item_vm" (without
+quotes).
+
+List Drives
+-----------
+Enter operation (1=search pattern, 2=list drives, 3=listen to music) : 2
+
+Description    DeviceID            MediaType              Size
+Μονάδα δίσκου  \\.\PHYSICALDRIVE0  Fixed hard disk media  240055794800
+Μονάδα δίσκου  \\.\PHYSICALDRIVE1  Fixed hard disk media  470102367310
+
+Description             Name  Size
+Τοπικός σκληρός δίσκος  C:    239467072156
+Τοπικός σκληρός δίσκος  E:    470102013464
+
+Search Pattern
+--------------
+Enter operation (1=search pattern, 2=list drives, 3=listen to music) : 1
+Enter unit size in bytes or press Enter (default 1073741824 for 1 GB) :
+Enter area size in bytes or press Enter (default 100) :
+Enter mountpoint/disk drive letter or press Enter (default C:) : E:
+Enter device or press Enter (default \\.\PHYSICALDRIVE0): \\.\PHYSICALDRIVE1
+Enter unit to jump or press Enter (default 0) :
+
+One more time, tons of results with evidence that indeed the folder
+has been mapped from within the virtual machine and used as a destination
+output to the physical machine. The traces of (what appears to be) the log
+files may also reveal the date which mapping operation took place.
+
+"\\VBoxSvr\\item_vm"
+"Successfully mounted 'item_vm' on '/media/sf_item_vm'\nNov 12 21:15:38
+ guser-VirtualBox" "Adding host mapping\r\n00:00:02.522138     Host path 
+'C:\\Users\\guser\\ Desktop\\item_vm', map name 'item_vm', writable, 
+automount=true, automntpnt=, create_symlinks=false"
+Z:\\VBoxSvr\\item_vm\\foss.py
+
+The investigation concludes that the user installed virtual machines using
+Vbox (both Win and Linux guests) on a separate disk (E:) and has also mapped
+a folder on his desktop to the guest VMs. Then uses this mapped folder to 
+export files from guests to the physical host machine. Moreover, the VMs
+have been used for downloading music and movies using known Torrent site.
+By using guest VMs to conduct such actions the user may hide some of those
+actions from monitoring applications or forensic investigations.
+
+
+
+
+--[ 009 - Last words
+
+You may use this tool in your forensic investigation, as it does not
+require any installation, reads directly the disk device(s) and 
+supports both Windows and Linux. You can copy this tool on a USB
+drive with a portable version of Python 3. The tool is data structure 
+agnostic and supports string or binary as search pattern, but only 
+literal matches since we wanted it to be fast. By using similar logic
+you should be able to discover interesting evidence, go back in time
+and build your own investigation story.
+
+
+
