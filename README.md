@@ -1,2 +1,3 @@
-# what
-What.Really.Was : A forensics tool for uncovering secrets
+# What.Really.Was : A forensics tool for uncovering secrets
+
+A tool for searching through storage devices like HD/SSD disks or USB disks. It would be able to discover deleted files, directories or other data. It is written in Python 3, does not require installation, reads directly from the disk device(s) and supports both Windows and Linux. You may copy it on a USB drive with a portable version of Python 3 and use it. It is data structure agnostic and supports string or binary search patterns, but only literal matches since I wanted to be super fast. By using similar logic you should be able to discover interesting evidence, go back in time and build your own forensic investigation story.
