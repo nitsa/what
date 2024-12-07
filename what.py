@@ -126,7 +126,7 @@ def logo():
     print (" - Provide unit to start reading from that particulat unit                                                ")
     print (" - Supports Windows and Linux like OS                                                                     ")
     print (" - Units are sequential                                                                                   ")
-    print ("                                                                                                          ")
+    print (" - Please run as admin                                                                                    ")
     print ("                                                                                                          ")
     print(Style.RESET_ALL)
 
